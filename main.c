@@ -252,11 +252,12 @@ void initialize() {
 }
 
 void printboard() {
-    //system("clear");
+    system("clear");
     printf("\n");
-    printf("x =  ９ ８ ７ ６ ５ ４ ３ ２ １\n");
+    printf("先輸入段(行)再輸入筋(列)\n");
+    printf(" ９ ８ ７ ６ ５ ４ ３ ２ １\n");
     for(i = 0; i < COLUMN; i++){
-        printf("    ");
+        //printf("    ");
         printf("|");
         for(j = 0; j < ROW; j++){
             if(board[i][j].id == osho){
