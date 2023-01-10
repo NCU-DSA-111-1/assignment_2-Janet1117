@@ -1,6 +1,6 @@
 #ifndef MOVE_H
 #define MOVE_H
-#include"stack.h"
+#include"list.h"
 #include<stdlib.h>
 #include<math.h>
 #define ROW 9
@@ -17,9 +17,13 @@ int xj, yi, yj;//輸入的座標
 int x0, x1, Y0, Y1;
 short turn;//1:player1, -1:player2
 int Write = 0;
-int amount = 0;
+int amount = 1;
 
 Item *tmp;
+Item pdata;
+Item *savefile = NULL;//記錄存檔位置
+
+Item *newnext;
 
 FILE *fp;
 
@@ -52,17 +56,23 @@ void BlueMove(){
     printf("%s請輸入你要移動的棋子:(若%s想悔棋請輸入0，存檔則輸入s或S)\n", player1, player2);
     scanf(" %c", &xi);
     if(xi - '0' == 0){
+        //悔棋
         printf("是否悔棋?[y/n]:");//是否悔棋
         scanf("%s", regret);
         if(regret[0] == 'y'){
-            if(IsEmpty()){
+            if(empty()){
                 printf("\033[1;33m已為初始狀態，無法悔棋!\033[m\n");
                 turn *= -1;
             }else{
-                tmp = (Item*)pop();
-                board[tmp->position0[0]][tmp->position0[1]] = tmp->p0;
-                board[tmp->position1[0]][tmp->position1[1]] = tmp->p1;
-                fseek(fp, -17, SEEK_CUR);
+                // if(stack == savefile){
+                //     savefile = savefile->next;
+                //     amount--;
+                //     fseek(fp, -17, SEEK_CUR);
+                // }
+                pdata = pop();
+                board[pdata.position0[0]][pdata.position0[1]] = pdata.p0;
+                board[pdata.position1[0]][pdata.position1[1]] = pdata.p1;
+                
             }
         }else{
             printf("%s請輸入你要移動的棋子:\n", player1);
@@ -85,13 +95,23 @@ void BlueMove(){
             RulesOfAllKindsOfPiece();
         }
     }else{
+        //存檔
         if(xi == 's' || xi == 'S'){
-            for(Write = 0; Write < top + 1; Write++){
-                amount += 1;
-                fprintf(fp, "%d %d %d %d %d %d %d %d %d\n", amount, stack[Write].p0.id, stack[Write].p0.color, stack[Write].p1.id, stack[Write].p1.color, stack[Write].position0[0], stack[Write].position0[1], stack[Write].position1[0], stack[Write].position1[1]);
-                printf("Write = %d\n", Write);
+            tmp = stack;
+            while(tmp->next != NULL){
+                tmp = tmp->next;
             }
-            Write = top;
+            fseek(fp, 0, SEEK_SET);
+            while(tmp->prev != NULL){
+                //amount++;
+                fprintf(fp, "%d %d %d %d %d %d %d %d %d\n", amount, tmp->p0.id, tmp->p0.color, tmp->p1.id, tmp->p1.color, tmp->position0[0], tmp->position0[1], tmp->position1[0], tmp->position1[1]);
+                tmp = tmp->prev;
+                // printf("Write = %d\n", Write);
+            }
+            //amount++;
+            fprintf(fp, "%d %d %d %d %d %d %d %d %d\n", amount, tmp->p0.id, tmp->p0.color, tmp->p1.id, tmp->p1.color, tmp->position0[0], tmp->position0[1], tmp->position1[0], tmp->position1[1]);
+            //savefile = stack;
+
             printf("\033[1;33m儲存成功!\033[m!\n");
             printf("%s請輸入你要移動的棋子:\n", player1);
             scanf(" %c %d",&xi, &yi);
@@ -147,17 +167,23 @@ void RedMove(){
     printf("%s請輸入你要移動的棋子:(若%s想悔棋請輸入0，存檔則輸入s或S)\n", player2, player1);
     scanf(" %c", &xi);
     if((xi - '0') == 0){
+        //悔棋
         printf("是否悔棋?[y/n]:");//是否悔棋
         scanf("%s", regret);
         if(regret[0] == 'y'){
-            if(IsEmpty()){
+            if(empty()){
                 printf("\033[1;33m已為初始狀態，無法悔棋!\033[m\n");
                 turn *= -1;
             }else{
-                tmp = (Item*)pop();
-                board[tmp->position0[0]][tmp->position0[1]] = tmp->p0;
-                board[tmp->position1[0]][tmp->position1[1]] = tmp->p1;
-                fseek(fp, -17, SEEK_CUR);
+                // if(stack == savefile){
+                //     savefile = savefile->next;
+                //     amount--;
+                //     fseek(fp, -17, SEEK_CUR);
+                // }
+                pdata = pop();
+                board[pdata.position0[0]][pdata.position0[1]] = pdata.p0;
+                board[pdata.position1[0]][pdata.position1[1]] = pdata.p1;
+                
             }
         }else{
             printf("%s請輸入你要移動的棋子:\n", player2);
@@ -181,13 +207,23 @@ void RedMove(){
         }
     }else{
         if(xi == 's' || xi == 'S'){
-            for(Write = 0; Write < top + 1; Write++){
-                amount += 1;
-                fprintf(fp, "%d %d %d %d %d %d %d %d %d\n", amount, stack[Write].p0.id, stack[Write].p0.color, stack[Write].p1.id, stack[Write].p1.color, stack[Write].position0[0], stack[Write].position0[1], stack[Write].position1[0], stack[Write].position1[1]);
-                printf("Write = %d\n", Write);
+            //存檔
+            tmp = stack;
+            while(tmp->next != NULL){
+                tmp = tmp->next;
             }
-            Write = top;
+            fseek(fp, 0, SEEK_SET);
+            while(tmp->prev != NULL){
+                //amount++;
+                fprintf(fp, "%d %d %d %d %d %d %d %d %d\n", amount, tmp->p0.id, tmp->p0.color, tmp->p1.id, tmp->p1.color, tmp->position0[0], tmp->position0[1], tmp->position1[0], tmp->position1[1]);
+                tmp = tmp->prev;
+                // printf("Write = %d\n", Write);
+            }
+            //amount++;
+            fprintf(fp, "%d %d %d %d %d %d %d %d %d\n", amount, tmp->p0.id, tmp->p0.color, tmp->p1.id, tmp->p1.color, tmp->position0[0], tmp->position0[1], tmp->position1[0], tmp->position1[1]);
+            //savefile = stack;
             printf("\033[1;33m儲存成功!\033[m!\n");
+
             printf("%s請輸入你要移動的棋子:\n", player2);
             scanf(" %c %d",&xi, &yi);
             if(((xi - '0') > COLUMN) || (yi > ROW) || ((xi - '0') < 1) || (yi < 1)){

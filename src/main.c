@@ -2,7 +2,9 @@
 #include<stdlib.h>
 #include<unistd.h>
 #include<string.h>
-#include"move.h"
+#include<ev.h>
+#include<time.h>
+#include"../inc/move.h"
 #define B(Piece) "\033[1;34m"#Piece"\033[m"
 #define R(Piece) "\033[1;31m"#Piece"\033[m"
 
@@ -32,12 +34,12 @@ char fb[2];
 int end = 0;//1:離開棋譜
 char save[2];//是否存檔
 
-
 int NewOrOld = -1;//1:開新檔，0:開舊檔
-char *filename;
+char *filename;//檔名
 
-struct piece board[ROW][COLUMN];
 
+
+Item *tmpnext = NULL;
 
 int main(int argc, char **argv) {
     
@@ -53,16 +55,17 @@ int main(int argc, char **argv) {
                 }else{
 
                     initialize();
-                    InitializeStack(stack);
+                    // InitializeStack(stack);
                     while(WhoWin == 0 && tie == 0){
                         IsStandard = 1;
                         printboard();
                         switch(turn){
-                            case 1:
+                            //輪流下棋
+                            case 1://藍方
                                 BlueMove();
                                 turn = (restart) ? turn : (turn * (-1));
                                 break;
-                            case -1:
+                            case -1://紅方
                                 RedMove();
                                 turn = (restart) ? turn : (turn * (-1));
                                 break;
@@ -73,12 +76,18 @@ int main(int argc, char **argv) {
                     printf("遊戲結束，是否存檔?[y/n]:");
                     scanf("%s", save);
                     if(save[0] == 'y'){
-                        for(Write = 0; Write < top + 1; Write++){
-                            amount += 1;
-                            fprintf(fp, "%d %d %d %d %d %d %d %d %d\n", amount, stack[Write].p0.id, stack[Write].p0.color, stack[Write].p1.id, stack[Write].p1.color, stack[Write].position0[0], stack[Write].position0[1], stack[Write].position1[0], stack[Write].position1[1]);
+                        tmp = stack;
+                        while(tmp->next != NULL){
+                            tmp = tmp->next;
                         }
+                        fseek(fp, 0, SEEK_SET);
+                        while(tmp->prev != NULL){
+                            fprintf(fp, "%d %d %d %d %d %d %d %d %d\n", amount, tmp->p0.id, tmp->p0.color, tmp->p1.id, tmp->p1.color, tmp->position0[0], tmp->position0[1], tmp->position1[0], tmp->position1[1]);
+                            tmp = tmp->prev;
+                        }
+                        fprintf(fp, "%d %d %d %d %d %d %d %d %d\n", amount, tmp->p0.id, tmp->p0.color, tmp->p1.id, tmp->p1.color, tmp->position0[0], tmp->position0[1], tmp->position1[0], tmp->position1[1]);
+                        printf("\033[1;33m儲存成功!\033[m!\n");
                     }
-                    Write = top;
                     printf("遊戲結束，");
                     if(WhoWin == 1){
                         printf("\033[1;34mPlayer1\033[m 獲勝!\n");
@@ -107,27 +116,32 @@ int main(int argc, char **argv) {
                 printf("\033[1;31m找不到檔案!\033[m");
             }
             else{
-                InitializeStack(stack);
+                Item *oldtmp;
+                oldtmp = (Item *) malloc (sizeof(Item));
                 counter = 0;
                 end = 0;
                 fscanf(fp, "%d", &amount);
                 while(amount != 0){
-                    fscanf(fp, "%d%d%d%d%d%d%d%d", &stack[counter].p0.id, &stack[counter].p0.color, &stack[counter].p1.id, &stack[counter].p1.color, &stack[counter].position0[0], &stack[counter].position0[1], &stack[counter].position1[0], &stack[counter].position1[1]);
+                    fscanf(fp, "%d%d%d%d%d%d%d%d", &oldtmp->p0.id, &oldtmp->p0.color, &oldtmp->p1.id, &oldtmp->p1.color, &oldtmp->position0[0], &oldtmp->position0[1], &oldtmp->position1[0], &oldtmp->position1[1]);
+                    pushold(oldtmp);
                     fscanf(fp, "%d", &amount);
                     counter++;
                 }
                 initialize();
-                l_top = -1;
                 
                 printf("counter = %d\n", counter);
                 printboard();
 
-                while(l_top < counter){
+                tmp = stack;
+                while (tmp->next != NULL){
+                    tmp = tmp->next;
+                }
+                while(1){
                     FOrB();
                     if(end == 1){
                         break;
                     }
-                    printboard();   
+                    printboard();
                 }
             }
         }
@@ -145,28 +159,47 @@ void FOrB(){
     printf("輸入f移動下一手，輸入b退回上一手[f/b]:");
     scanf("%s", fb);
     if(fb[0] == 'f'){
-        if(l_top == counter - 1){
+        if((tmp == NULL) && (tmpnext != stack)){
+            tmp = tmpnext;
+        }
+        if(tmp == NULL){
             printf("已為最後一手，是否結束?[y/n]:");
             scanf("%s", fb);
             if(fb[0] == 'y'){
                 end = 1;
             }
         }else{
-            l_top++;
-            board[stack[l_top].position0[0]][stack[l_top].position0[1]].color = 0;
-            board[stack[l_top].position0[0]][stack[l_top].position0[1]].id = 0;
-            board[stack[l_top].position1[0]][stack[l_top].position1[1]].color = stack[l_top].p0.color;
-            board[stack[l_top].position1[0]][stack[l_top].position1[1]].id = stack[l_top].p0.id;
+            board[tmp->position0[0]][tmp->position0[1]].color = 0;
+            board[tmp->position0[0]][tmp->position0[1]].id = 0;
+            board[tmp->position1[0]][tmp->position1[1]].color = tmp->p0.color;
+            board[tmp->position1[0]][tmp->position1[1]].id = tmp->p0.id;
+            if(tmp->prev == NULL){
+                tmpnext = tmp;
+            }
+            tmp = tmp->prev;
         }
     }else if(fb[0] == 'b'){
-        if(l_top == -1){
-            printf("已為第一手\n");
+        printf("hhhhh\n");
+        if((tmp == NULL) && (tmpnext == stack)){
+            tmp = stack;
+        }
+        if(tmp == NULL){
+            printf("已為第一手，是否結束?[y/n]:\n");
+            scanf("%s", fb);
+            if(fb[0] == 'y'){
+                end = 1;
+            }
         }else{
-            board[stack[l_top].position0[0]][stack[l_top].position0[1]].color = stack[l_top].p0.color;;
-            board[stack[l_top].position0[0]][stack[l_top].position0[1]].id = stack[l_top].p0.id;
-            board[stack[l_top].position1[0]][stack[l_top].position1[1]].color = stack[l_top].p1.color;
-            board[stack[l_top].position1[0]][stack[l_top].position1[1]].id = stack[l_top].p1.id;
-            l_top--;
+            board[tmp->position0[0]][tmp->position0[1]].color = tmp->p0.color;
+            board[tmp->position0[0]][tmp->position0[1]].id = tmp->p0.id;
+            board[tmp->position1[0]][tmp->position1[1]].color = tmp->p1.color;
+            board[tmp->position1[0]][tmp->position1[1]].id = tmp->p1.id;
+            if(tmp->next == NULL){
+                tmpnext = tmp;
+            }
+            tmp = tmp->next;
+            
+            
         }
     }else{
         printf("輸入錯誤，請從新輸入!\n");
@@ -257,7 +290,6 @@ void printboard() {
     printf("先輸入段(行)再輸入筋(列)\n");
     printf(" ９ ８ ７ ６ ５ ４ ３ ２ １\n");
     for(i = 0; i < COLUMN; i++){
-        //printf("    ");
         printf("|");
         for(j = 0; j < ROW; j++){
             if(board[i][j].id == osho){
@@ -341,3 +373,5 @@ void IsGameOver(){
         
     }
 }
+
+
