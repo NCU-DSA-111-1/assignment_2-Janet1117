@@ -22,13 +22,15 @@ ex ./run -l game1.txt
 ####   Example
 player1's turn:         
 player1請輸入你要移動的棋子:(若Player2想悔棋請輸入0，存檔則輸入s或S)            
-5 7
+5 7     
+
 Player1請輸入你要放的位置           
-5 6
+5 6     
 
 palyer2's turn:         
 player2請輸入你要移動的棋子:(若Player1想悔棋請輸入0，存檔則輸入s或S)            
 5 3
+
 Player2請輸入你要放的位置           
 5 4
 
