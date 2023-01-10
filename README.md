@@ -41,4 +41,5 @@ Player2請輸入你要放的位置
 6. Playing data will be record in a txt file named as 
    {new_game_file_name}, which user entered while 
     runnig the program
+7. If player load the notation, enter f to move to the next step.If player wants to go back to the previous step, please enter b.
 
