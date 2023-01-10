@@ -4,7 +4,7 @@
 #include<string.h>
 #include<ev.h>
 #include<time.h>
-#include"../inc/move.h"
+#include"../inc/backprop.h"
 #define B(Piece) "\033[1;34m"#Piece"\033[m"
 #define R(Piece) "\033[1;31m"#Piece"\033[m"
 
