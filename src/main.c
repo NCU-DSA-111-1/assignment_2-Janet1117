@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
                 if((fp = fopen(filename, "w")) == NULL){
                     printf("\033[1;31m無法創建檔案!\033[m");
                 }else{
-
+                    amount = 1;
                     initialize();
                     // InitializeStack(stack);
                     while(WhoWin == 0 && tie == 0){
@@ -82,9 +82,11 @@ int main(int argc, char **argv) {
                         }
                         fseek(fp, 0, SEEK_SET);
                         while(tmp->prev != NULL){
+                            amount = 1;
                             fprintf(fp, "%d %d %d %d %d %d %d %d %d\n", amount, tmp->p0.id, tmp->p0.color, tmp->p1.id, tmp->p1.color, tmp->position0[0], tmp->position0[1], tmp->position1[0], tmp->position1[1]);
                             tmp = tmp->prev;
                         }
+                        amount = 1;
                         fprintf(fp, "%d %d %d %d %d %d %d %d %d\n", amount, tmp->p0.id, tmp->p0.color, tmp->p1.id, tmp->p1.color, tmp->position0[0], tmp->position0[1], tmp->position1[0], tmp->position1[1]);
                         printf("\033[1;33m儲存成功!\033[m!\n");
                     }
@@ -118,31 +120,31 @@ int main(int argc, char **argv) {
             else{
                 Item *oldtmp;
                 oldtmp = (Item *) malloc (sizeof(Item));
-                counter = 0;
                 end = 0;
                 fscanf(fp, "%d", &amount);
                 while(amount != 0){
                     fscanf(fp, "%d%d%d%d%d%d%d%d", &oldtmp->p0.id, &oldtmp->p0.color, &oldtmp->p1.id, &oldtmp->p1.color, &oldtmp->position0[0], &oldtmp->position0[1], &oldtmp->position1[0], &oldtmp->position1[1]);
                     pushold(oldtmp);
                     fscanf(fp, "%d", &amount);
-                    counter++;
                 }
                 initialize();
-                
-                printf("counter = %d\n", counter);
                 printboard();
-
                 tmp = stack;
-                while (tmp->next != NULL){
-                    tmp = tmp->next;
-                }
-                while(1){
-                    FOrB();
-                    if(end == 1){
-                        break;
+                if(stack == NULL){
+                    printf("\033[1;31m檔案是空的!\n\033[m");
+                }else{
+                    while (tmp->next != NULL){
+                        tmp = tmp->next;
                     }
-                    printboard();
+                    while(1){
+                        FOrB();
+                        if(end == 1){
+                            break;
+                        }
+                        printboard();
+                    }
                 }
+                
             }
         }
         else{
